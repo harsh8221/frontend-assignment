@@ -1,22 +1,26 @@
 .pagination {
   display: flex;
   justify-content: center;
-  gap: 8px;
+  align-items: center;
+  gap: 4px;
   margin-top: 20px;
 }
 
 .pagination button {
-  padding: 8px 16px;
+  padding: 8px 12px;
   border: 1px solid #ddd;
   background-color: white;
   color: #333;
   cursor: pointer;
   border-radius: 4px;
   transition: all 0.2s ease;
+  min-width: 40px;
+  font-size: 14px;
 }
 
 .pagination button:hover:not(:disabled) {
   background-color: #f0f0f0;
+  border-color: #999;
 }
 
 .pagination button:disabled {
@@ -31,14 +35,23 @@
   border-color: #007bff;
 }
 
+.pagination .ellipsis {
+  padding: 8px;
+  color: #666;
+}
+
 @media (max-width: 600px) {
+  .wrapper {
+    padding: 20px 10px;
+  }
+  
   .container {
-    padding: 10px;
+    padding: 20px;
   }
 
   .tableContainer th,
   .tableContainer td {
-    padding: 12px;
+    padding: 12px 16px;
   }
 
   .pagination {

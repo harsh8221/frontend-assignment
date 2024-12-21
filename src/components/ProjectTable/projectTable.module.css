@@ -1,0 +1,40 @@
+.tableContainer {
+  overflow-x: auto;
+  border-radius: 8px;
+  border: 1px solid #eee;
+  margin: 0 auto 20px;
+}
+
+.tableContainer table {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: white;
+  margin: 0 auto;
+}
+
+.tableContainer th,
+.tableContainer td {
+  padding: 16px 24px;
+  text-align: center;
+  border-bottom: 1px solid #eee;
+}
+
+.tableContainer th {
+  background-color: #f8f9fa;
+  font-weight: 600;
+  color: #333;
+}
+
+.tableContainer tr:hover {
+  background-color: #f8f9fa;
+}
+
+.loading, .error {
+  text-align: center;
+  padding: 20px;
+  color: #666;
+}
+
+.error {
+  color: #dc3545;
+}
