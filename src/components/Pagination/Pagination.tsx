@@ -58,7 +58,11 @@ export const Pagination: React.FC<PaginationProps> = ({
       {getPageNumbers().map((pageNum, index) => {
         if (pageNum === '...') {
           return (
-            <span key={`ellipsis-${index}`} className={styles.ellipsis}>
+            <span
+              key={`ellipsis-${index}`}
+              className={styles.ellipsis}
+              data-testid='pagination-ellipsis'
+              id='pagination-ellipsis'>
               ...
             </span>
           );
@@ -71,7 +75,8 @@ export const Pagination: React.FC<PaginationProps> = ({
             onClick={() => onPageChange(page)}
             className={currentPage === page ? styles.active : ''}
             aria-label={`Page ${page}`}
-            aria-current={currentPage === page ? 'page' : undefined}>
+            aria-current={currentPage === page ? 'page' : undefined}
+            data-testid={`pagination-${page}`}>
             {page}
           </button>
         );
