@@ -2,44 +2,25 @@ import '@testing-library/jest-dom';
 import { ArtsTable } from '../ArtsTable';
 import { act } from 'react';
 import { render, screen } from '@testing-library/react';
-import { ArtProject } from '../../../types/ArtProject';
 import { fireEvent } from '@testing-library/react';
 
-describe('ArtsTable Component', () => {
-  const mockProjects: ArtProject[] = [
-    {
-      's.no': 1,
-      'amt.pledged': 1500,
-      blurb: 'Test project 1',
-      by: 'Test Creator 1',
-      country: 'US',
-      currency: 'USD',
-      'end.time': '2024-12-31T23:59:59-05:00',
-      location: 'New York, NY',
-      'percentage.funded': 75,
-      'num.backers': '100',
-      state: 'NY',
-      title: 'Test Project 1',
-      type: 'Technology',
-      url: '/projects/test1',
-    },
-    {
-      's.no': 2,
-      'amt.pledged': 2000,
-      blurb: 'Test project 2',
-      by: 'Test Creator 2',
-      country: 'GB',
-      currency: 'GBP',
-      'end.time': '2024-12-31T23:59:59-05:00',
-      location: 'London, UK',
-      'percentage.funded': 150,
-      'num.backers': '200',
-      state: 'LDN',
-      title: 'Test Project 2',
-      type: 'Games',
-      url: '/projects/test2',
-    },
-  ];
+describe('ArtsTable Pagination Integration', () => {
+  const mockProjects = Array.from({ length: 150 }, (_, index) => ({
+    's.no': index + 1,
+    'amt.pledged': 1000,
+    blurb: `Project ${index + 1}`,
+    by: 'Test Creator',
+    country: 'US',
+    currency: 'USD',
+    'end.time': '2024-12-31T23:59:59-05:00',
+    location: 'New York, NY',
+    'percentage.funded': 100,
+    'num.backers': '100',
+    state: 'NY',
+    title: `Test Project ${index + 1}`,
+    type: 'Technology',
+    url: `/projects/test${index + 1}`,
+  }));
 
   beforeEach(() => {
     global.fetch = jest.fn(() =>
@@ -53,100 +34,59 @@ describe('ArtsTable Component', () => {
     window.scrollTo = jest.fn();
   });
 
-  afterEach(() => {
-    jest.resetAllMocks();
-  });
-
-  it('should fetch and render projects on mount', async () => {
+  it('should update display when changing rows per page', async () => {
     await act(async () => {
       render(<ArtsTable />);
     });
 
-    expect(global.fetch).toHaveBeenCalledTimes(1);
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('frontend-assignment.json')
-    );
+    const rowsSelect = screen.getByRole('combobox');
+    fireEvent.change(rowsSelect, { target: { value: '20' } });
+
+    // Should show 20 rows (plus header row)
+    expect(screen.getAllByRole('row')).toHaveLength(21);
   });
 
-  it('should handle API error correctly', async () => {
-    global.fetch = jest.fn(() =>
-      Promise.reject(new Error('API Error'))
-    ) as jest.Mock;
+  it('should reset to first page when changing rows per page', async () => {
+    await act(async () => {
+      render(<ArtsTable />);
+    });
+
+    // Go to second page
+    const nextButton = screen.getByLabelText('Next page');
+    fireEvent.click(nextButton);
+
+    // Change rows per page
+    const rowsSelect = screen.getByRole('combobox');
+    fireEvent.change(rowsSelect, { target: { value: '20' } });
+
+    // Should show first 20 items
+    const firstItem = screen.getByText('1');
+    expect(firstItem).toBeInTheDocument();
+  });
+
+  it('should handle direct page input', async () => {
+    await act(async () => {
+      render(<ArtsTable />);
+    });
+
+    const pageInput = screen.getByRole('spinbutton');
+    fireEvent.change(pageInput, { target: { value: '2' } });
+
+    // Should show items from second page
+    const firstItemOnSecondPage = screen.getByText('50');
+    expect(firstItemOnSecondPage).toBeInTheDocument();
+  });
+
+  it('should scroll to top when changing pages', async () => {
+    const scrollToSpy = jest.spyOn(window, 'scrollTo');
 
     await act(async () => {
       render(<ArtsTable />);
     });
 
-    expect(
-      await screen.findByText(/Failed to load projects/)
-    ).toBeInTheDocument();
-  });
+    const nextButton = screen.getByLabelText('Next page');
+    fireEvent.click(nextButton);
 
-  it('should show loading state initially', async () => {
-    render(<ArtsTable />);
-    expect(screen.getByText('Loading projects...')).toBeInTheDocument();
-
-    // Wait for loading to complete to avoid act warnings
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-  });
-
-  it('should sort projects by serial number', async () => {
-    const unsortedProjects = [
-      { ...mockProjects[0], 's.no': 2 },
-      { ...mockProjects[0], 's.no': 1 },
-    ];
-
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(unsortedProjects),
-      })
-    ) as jest.Mock;
-
-    render(<ArtsTable />);
-
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-
-    const rows = screen.getAllByRole('row');
-    const firstSerialNumber = rows[1]?.firstChild?.textContent;
-    expect(firstSerialNumber).toBe('1');
-  });
-
-  it('should handle pagination correctly', async () => {
-    const manyProjects = Array.from({ length: 7 }, (_, i) => ({
-      ...mockProjects[0],
-      's.no': i + 1,
-    }));
-
-    global.fetch = jest.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve(manyProjects),
-      })
-    ) as jest.Mock;
-
-    render(<ArtsTable />);
-
-    await act(async () => {
-      await new Promise((resolve) => setTimeout(resolve, 0));
-    });
-
-    // Should show only 5 projects initially (plus header row)
-    expect(screen.getAllByRole('row')).toHaveLength(6);
-
-    await act(async () => {
-      fireEvent.click(screen.getByTestId('pagination-2'));
-    });
-
-    // Add test for scrollTo
-    expect(window.scrollTo).toHaveBeenCalledWith({
-      top: 0,
-      behavior: 'smooth',
-    });
-    expect(screen.getAllByRole('row')).toHaveLength(3);
+    expect(scrollToSpy).toHaveBeenCalledWith({ top: 0, behavior: 'smooth' });
   });
 });

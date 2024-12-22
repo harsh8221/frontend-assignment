@@ -2,92 +2,87 @@ import React from 'react';
 import { PaginationProps } from '../../types/PaginationProps';
 import styles from './pagination.module.css';
 
+const rowsPerPageOptions = [5, 10, 20, 50, 100];
+
 export const Pagination: React.FC<PaginationProps> = ({
   currentPage,
   totalPages,
   onPageChange,
+  rowsPerPage,
+  onRowsPerPageChange,
+  totalItems,
 }) => {
-  const getPageNumbers = () => {
-    const delta = 3;
-    let range = [];
-
-    range.push(1);
-
-    for (
-      let i = Math.max(2, currentPage - delta);
-      i <= Math.min(totalPages - 1, currentPage + delta);
-      i++
-    ) {
-      range.push(i);
-    }
-
-    // Always show last page
-    if (totalPages > 1) {
-      range.push(totalPages);
-    }
-
-    // Add ellipses
-    const withEllipsis = [];
-    let prev = 0;
-
-    for (const i of range) {
-      if (i - prev === 2) {
-        withEllipsis.push(prev + 1);
-      } else if (i - prev > 2) {
-        withEllipsis.push('...');
-      }
-      withEllipsis.push(i);
-      prev = i;
-    }
-
-    return withEllipsis;
-  };
+  // Calculate the range of items being displayed
+  const startItem = (currentPage - 1) * rowsPerPage + 1;
+  const endItem = Math.min(currentPage * rowsPerPage, totalItems);
 
   return (
-    <div
-      className={styles.pagination}
-      role='navigation'
-      aria-label='Pagination'>
-      <button
-        onClick={() => onPageChange(currentPage - 1)}
-        disabled={currentPage === 1}
-        aria-label='Previous page'>
-        ←
-      </button>
+    <div className={styles.paginationContainer}>
+      <div className={styles.rowsPerPageContainer}>
+        <span>Rows per page</span>
+        <select
+          value={rowsPerPage}
+          onChange={(e) => onRowsPerPageChange(Number(e.target.value))}
+          className={styles.rowsSelect}>
+          {rowsPerPageOptions.map((option) => (
+            <option key={option} value={option}>
+              {option}
+            </option>
+          ))}
+        </select>
+      </div>
 
-      {getPageNumbers().map((pageNum, index) => {
-        if (pageNum === '...') {
-          return (
-            <span
-              key={`ellipsis-${index}`}
-              className={styles.ellipsis}
-              data-testid='pagination-ellipsis'
-              id='pagination-ellipsis'>
-              ...
-            </span>
-          );
-        }
+      <div className={styles.paginationInfo}>
+        {startItem}-{endItem} of {totalItems} rows
+      </div>
 
-        const page = pageNum as number;
-        return (
-          <button
-            key={page}
-            onClick={() => onPageChange(page)}
-            className={currentPage === page ? styles.active : ''}
-            aria-label={`Page ${page}`}
-            aria-current={currentPage === page ? 'page' : undefined}
-            data-testid={`pagination-${page}`}>
-            {page}
-          </button>
-        );
-      })}
+      <div className={styles.paginationControls}>
+        <button
+          onClick={() => onPageChange(1)}
+          disabled={currentPage === 1}
+          aria-label='First page'
+          className={styles.paginationButton}>
+          ⟨⟨
+        </button>
+        <button
+          onClick={() => onPageChange(currentPage - 1)}
+          disabled={currentPage === 1}
+          aria-label='Previous page'
+          className={styles.paginationButton}>
+          ⟨
+        </button>
 
-      <button
-        onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
-        aria-label='Next page'>
-        →
-      </button>
+        <div className={styles.pageInput}>
+          <input
+            type='number'
+            value={currentPage}
+            onChange={(e) => {
+              const page = parseInt(e.target.value);
+              if (page > 0 && page <= totalPages) {
+                onPageChange(page);
+              }
+            }}
+            min={1}
+            max={totalPages}
+          />
+          <span>of {totalPages}</span>
+        </div>
+
+        <button
+          onClick={() => onPageChange(currentPage + 1)}
+          disabled={currentPage === totalPages}
+          aria-label='Next page'
+          className={styles.paginationButton}>
+          ⟩
+        </button>
+        <button
+          onClick={() => onPageChange(totalPages)}
+          disabled={currentPage === totalPages}
+          aria-label='Last page'
+          className={styles.paginationButton}>
+          ⟩⟩
+        </button>
+      </div>
     </div>
   );
 };
