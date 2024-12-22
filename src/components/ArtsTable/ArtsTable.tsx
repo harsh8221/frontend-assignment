@@ -55,26 +55,27 @@ export const ArtsTable: React.FC = () => {
   };
 
   return (
-    <div className={styles.wrapper}>
-      <div className={styles.container}>
-        <h1>Arts Projects</h1>
-
-        <ProjectTable
-          projects={currentProjects}
-          loading={loading}
-          error={error}
-        />
-
-        {!loading && !error && projects.length > 0 && (
-          <Pagination
-            currentPage={currentPage}
-            totalPages={totalPages}
-            onPageChange={handlePageChange}
-            rowsPerPage={rowsPerPage}
-            onRowsPerPageChange={handleRowsPerPageChange}
-            totalItems={projects.length}
+    <div className={styles.wrapper} role='main'>
+      <div className={styles.container} aria-label='Arts Projects Dashboard'>
+        <h1 id='main-heading'>Arts Projects</h1>
+        <div role='region' aria-labelledby='main-heading'>
+          <ProjectTable
+            projects={currentProjects}
+            loading={loading}
+            error={error}
           />
-        )}
+
+          {!loading && !error && projects.length > 0 && (
+            <Pagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={handlePageChange}
+              rowsPerPage={rowsPerPage}
+              onRowsPerPageChange={handleRowsPerPageChange}
+              totalItems={projects.length}
+            />
+          )}
+        </div>
       </div>
     </div>
   );
