@@ -48,6 +48,13 @@ describe('ArtsTable Component', () => {
         json: () => Promise.resolve(mockProjects),
       })
     ) as jest.Mock;
+
+    // Mock window.scrollTo
+    window.scrollTo = jest.fn();
+  });
+
+  afterEach(() => {
+    jest.resetAllMocks();
   });
 
   it('should fetch and render projects on mount', async () => {
@@ -76,10 +83,13 @@ describe('ArtsTable Component', () => {
   });
 
   it('should show loading state initially', async () => {
-    act(() => {
-      render(<ArtsTable />);
-    });
+    render(<ArtsTable />);
     expect(screen.getByText('Loading projects...')).toBeInTheDocument();
+
+    // Wait for loading to complete to avoid act warnings
+    await act(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 0));
+    });
   });
 
   it('should sort projects by serial number', async () => {
@@ -95,8 +105,10 @@ describe('ArtsTable Component', () => {
       })
     ) as jest.Mock;
 
+    render(<ArtsTable />);
+
     await act(async () => {
-      render(<ArtsTable />);
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
     const rows = screen.getAllByRole('row');
@@ -117,17 +129,24 @@ describe('ArtsTable Component', () => {
       })
     ) as jest.Mock;
 
+    render(<ArtsTable />);
+
     await act(async () => {
-      render(<ArtsTable />);
+      await new Promise((resolve) => setTimeout(resolve, 0));
     });
 
     // Should show only 5 projects initially (plus header row)
     expect(screen.getAllByRole('row')).toHaveLength(6);
 
-    // Change page
-    fireEvent.click(screen.getByTestId('pagination-2'));
+    await act(async () => {
+      fireEvent.click(screen.getByTestId('pagination-2'));
+    });
 
-    // Should show remaining 2 projects on second page
+    // Add test for scrollTo
+    expect(window.scrollTo).toHaveBeenCalledWith({
+      top: 0,
+      behavior: 'smooth',
+    });
     expect(screen.getAllByRole('row')).toHaveLength(3);
   });
 });
